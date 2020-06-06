@@ -1,7 +1,6 @@
 from PySide2.QtUiTools import QUiLoader
 from PySide2.QtCore import QFile
 
-
 def load_ui(file_name, where=None):
     loader = QUiLoader()
 
