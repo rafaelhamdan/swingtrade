@@ -5,6 +5,7 @@ from extract import *
 from list_order import *
 from profit import *
 from register_order import *
+from reports import *
 from util import gui
 
 from PySide2.QtWidgets import QApplication, QMessageBox, QTabWidget, QVBoxLayout
@@ -45,6 +46,9 @@ class Main:
 
         self.profit = Profit(self.db)
         self.tabWindow.addTab(self.profit.getUi(), 'Lucros/Prejuízos')
+        
+        self.reports = Reports(self.db)
+        self.tabWindow.addTab(self.reports.getUi(), 'Relatórios')
 
         # Update windows once tab changes
         self.tabWindow.currentChanged.connect(self.updateWindow)
@@ -53,14 +57,17 @@ class Main:
         # Once the tab has gone to list the orders, update it
         # TODO: Only update/re-render if the database has changed since we started
         if (index == 0):
-            window = self.listOrder
+            self.listOrder.updateWindow()
         elif (index == 1):
-            window = self.registerOrder
+            self.registerOrder.updateWindow()
         elif (index == 2):
-            window = self.extract
+            self.extract.updateWindow()
         elif (index == 3):
-            window = self.profit
-        window.updateWindow()
+            self.profit.updateWindow()
+        elif (index == 4):
+            self.reports.updateWindow()
+        else:
+            assert(0)
 
 if __name__ == '__main__':
     main = Main()
