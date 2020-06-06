@@ -1,3 +1,4 @@
+import datetime
 import sys
 
 class Calculator:
@@ -49,4 +50,27 @@ class Calculator:
             totalBuyingValue = averageBuyingValue * order[5]
             profit = totalSellingValue - totalBuyingValue
             ret.append([order[1], order[3], averageBuyingValue, order[5], order[6], profit])
+        return ret
+
+    def getMonthlyReport(self, ordersInAscendingDate):
+        ret = {}
+        for order in ordersInAscendingDate:
+            self.updateStockAverageValueAndAmount(order)
+            # After updating stock average value and amount, check if
+            # that's a selling operation and calculate profit/loss
+            if (order[2] != 'V'):
+                continue
+            # Calculate total selling value, profits, etc.
+            totalSellingValue = self.getTransactionValueWithTaxes(order[5], order[6], True)
+            totalSellingValueWithoutTaxes = order[5] * order[6]
+            averageBuyingValue = self.stocks[order[3]][1]
+            totalBuyingValue = averageBuyingValue * order[5]
+            profit = totalSellingValue - totalBuyingValue
+            # Update corresponding month with variables calculated
+            date = datetime.datetime.strptime(order[1], '%Y-%m-%d')
+            dateString = date.strftime('%b %y')
+            if dateString not in ret:
+                ret[dateString] = [0, 0]
+            ret[dateString][0] += totalSellingValueWithoutTaxes
+            ret[dateString][1] += profit
         return ret

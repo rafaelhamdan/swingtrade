@@ -1,0 +1,67 @@
+{% block javascript %}
+<script>
+{% include "js/highcharts.js" %}
+document.addEventListener('DOMContentLoaded', function () {
+Highcharts.chart('container', {
+    title: {
+        text: 'Relatório'
+    },
+
+    subtitle: {
+        text: 'Total de vendas e lucros/prejuízos por mês operado'
+    },
+
+    yAxis: {
+        title: {
+            text: 'Valor (R$)'
+        },
+        labels: {
+            formatter: function() {
+            if (this.value >= 0) {
+                return 'R$' + this.value
+            } else {
+                return '-R$' + (-this.value)
+            }
+            }
+        },
+    },
+
+    xAxis: {
+        title: {
+            text: 'Mês/Ano'
+        },
+        categories: {{ chart_months|safe }}
+    },
+
+    legend: {
+        layout: 'vertical',
+        align: 'right',
+        verticalAlign: 'middle'
+    },
+
+    plotOptions: {
+        
+    },
+
+    series: {{ chart_data|safe }},
+
+    responsive: {
+        rules: [{
+            condition: {
+                maxWidth: 500
+            },
+            chartOptions: {
+                legend: {
+                    layout: 'horizontal',
+                    align: 'center',
+                    verticalAlign: 'bottom'
+                }
+            }
+        }]
+    }
+
+});
+});
+</script>
+{% endblock %}
+<div id="container" style="height: 500px"></div>
