@@ -30,7 +30,7 @@ class Profit:
         self.orderTable.setHorizontalHeaderLabels(['Data', 'Código', 'Valor médio de compra (R$)', 'Qnt.', 'Valor de venda (R$)', 'Lucro/prejuízo (R$)'])
         self.orderTable.setColumnWidth(1, self.orderTable.parent().width()*0.15)
         self.orderTable.setColumnWidth(2, self.orderTable.parent().width()*0.30)
-        self.orderTable.setColumnWidth(1, self.orderTable.parent().width()*0.10)
+        self.orderTable.setColumnWidth(3, self.orderTable.parent().width()*0.10)
         self.orderTable.setColumnWidth(4, self.orderTable.parent().width()*0.25)
         self.orderTable.setColumnWidth(5, self.orderTable.parent().width()*0.25)
 

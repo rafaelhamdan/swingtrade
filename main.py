@@ -3,6 +3,7 @@ import sys
 from database import *
 from extract import *
 from list_order import *
+from position import *
 from profit import *
 from register_order import *
 from reports import *
@@ -13,7 +14,7 @@ from PySide2.QtWidgets import QApplication, QMessageBox, QTabWidget, QVBoxLayout
 class Main:
     def __init__(self):
         # Create the Qt Application
-        app = QApplication(sys.argv)
+        self.app = QApplication(sys.argv)
 
         # Create and show the form
         self.mainWindow = gui.load_ui('./windows/main.ui')
@@ -28,7 +29,7 @@ class Main:
             exit(-1)
 
         self.mainWindow.show()
-        sys.exit(app.exec_())
+        sys.exit(self.app.exec_())
 
     def setupTabWidgets(self):
         self.tabWindow = self.mainWindow.findChild(QTabWidget, 'tab_widget')
@@ -50,6 +51,10 @@ class Main:
         self.reports = Reports(self.db)
         self.tabWindow.addTab(self.reports.getUi(), 'Relatórios')
 
+        self.position = Position(self.db)
+        self.tabWindow.addTab(self.position.getUi(), 'Posição')
+        self.app.aboutToQuit.connect(self.position.stopThreads)
+
         # Update windows once tab changes
         self.tabWindow.currentChanged.connect(self.updateWindow)
 
@@ -66,6 +71,8 @@ class Main:
             self.profit.updateWindow()
         elif (index == 4):
             self.reports.updateWindow()
+        elif (index == 5):
+            self.position.updateWindow()
         else:
             assert(0)
 
