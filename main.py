@@ -44,7 +44,7 @@ class Main:
         self.tabWindow.addTab(self.extract.getUi(), 'Extratos anuais')
 
         self.profit = Profit(self.db)
-        self.tabWindow.addTab(self.profit.getUi(), 'Lucros e Prejuízos')
+        self.tabWindow.addTab(self.profit.getUi(), 'Lucros/Prejuízos')
 
         # Update windows once tab changes
         self.tabWindow.currentChanged.connect(self.updateWindow)
