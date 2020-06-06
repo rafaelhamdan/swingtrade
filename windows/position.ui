@@ -29,6 +29,18 @@
       </widget>
      </item>
      <item>
+      <widget class="QLabel" name="label">
+       <property name="font">
+        <font>
+         <pointsize>10</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>O valor atual e o lucro/prejuízo são atualizados temporariamente e demandam acesso à Internet</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QTableWidget" name="stock_table"/>
      </item>
     </layout>

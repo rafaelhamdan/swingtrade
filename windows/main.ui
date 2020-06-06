@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1024</width>
+    <width>966</width>
     <height>768</height>
    </rect>
   </property>
@@ -17,7 +17,7 @@
    </sizepolicy>
   </property>
   <property name="windowTitle">
-   <string>Swing Trade IR</string>
+   <string>Swing Trade</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -31,7 +31,7 @@
          </font>
         </property>
         <property name="text">
-         <string>Calculadora Swing Trade IR</string>
+         <string>Swing Trade</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
