@@ -7,14 +7,37 @@ from util import gui
 from PySide2.QtWidgets import QDialogButtonBox, QMessageBox, QFileDialog, QGridLayout, QPushButton, QVBoxLayout
 from PySide2.QtCore import SIGNAL, QObject
 
+class FileDialog(QFileDialog):
+    def __init__(self, *args, **kwargs):
+        super(FileDialog, self).__init__(*args, **kwargs)
+        self.setup()
+        self.show()
+        self.hideButtons()
+    
+    def keyPressEvent(self, event):
+        # Ignore key press events here
+        pass
+
+    def setup(self):
+        self.setNameFilter('Extrato CEI Negociação de Ativos (*.xls)')
+
+    def hideButtons(self):
+        # Hide open and cancel buttons that may wipe the file dialog widget
+        buttonBox = self.findChild(QDialogButtonBox)
+        if (buttonBox):
+            if (buttonBox.button(QDialogButtonBox.Open)):
+                buttonBox.button(QDialogButtonBox.Open).hide()
+            if (buttonBox.button(QDialogButtonBox.Cancel)):
+                buttonBox.button(QDialogButtonBox.Cancel).hide()
+
 class RegisterOrder:
     def __init__(self, db):
         self.ui = gui.load_ui('./windows/register_order.ui')
         self.db = db
 
         fileLayout = self.ui.findChild(QVBoxLayout, 'file_layout')
-        self.fileDialog = QFileDialog()
-        self.fileDialog.setNameFilter('Extrato CEI Negociação de Ativos (*.xls)')
+        self.fileDialog = FileDialog()
+        self.fileDialog.accepted.connect(self.processFiles)
         fileLayout.addWidget(self.fileDialog)
 
         self.processFilesButton = self.ui.findChild(QPushButton, 'process_files_button')
@@ -45,6 +68,7 @@ class RegisterOrder:
         return files
 
     def processFiles(self):
+        self.fileDialog.show()
         files = self.getSelectedFiles()
         if (len(files) == 0):
             return
