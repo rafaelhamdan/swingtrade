@@ -25,6 +25,9 @@ class RegisterOrder:
 
         self.updateWindow()
 
+    def updateWindow(self):
+        None
+
     def confirmRequest(self, title):
         response = QMessageBox.question(self.ui, title, "Tem certeza que deseja continuar?\nIsso irá apagar todas as suas operações registradas.",
                                         QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Abort)
@@ -32,16 +35,18 @@ class RegisterOrder:
             return False
         return True
 
-    def updateWindow(self):
-        None
-
-    def processFiles(self):
+    def getSelectedFiles(self):
         files = self.fileDialog.selectedFiles()
         if (len(files) == 0 or not os.path.isfile(files[0])):
             QMessageBox.critical(self.ui, "ERRO", 'Por favor selecione um arquivo', QMessageBox.StandardButton.Abort)
-            return
-
+            return []
         if (not self.confirmRequest("Importar operações")):
+            return []
+        return files
+
+    def processFiles(self):
+        files = self.getSelectedFiles()
+        if (len(files) == 0):
             return
 
         orders = []

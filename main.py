@@ -18,7 +18,18 @@ class Main:
         self.mainWindow = gui.load_ui('./windows/main.ui')
         self.db = Database()
 
-        # Windows for tabs
+        # Setup tab widgets
+        self.setupTabWidgets()
+
+        # Check database is valid
+        if (not self.db.isValid()):
+            QMessageBox.critical(self.mainWindow, 'ERRO', 'Impossível encontrar arquivo de banco de dados', QMessageBox.StandardButton.Abort)
+            exit(-1)
+
+        self.mainWindow.show()
+        sys.exit(app.exec_())
+
+    def setupTabWidgets(self):
         self.tabWindow = self.mainWindow.findChild(QTabWidget, 'tab_widget')
 
         registerOrderLayout = self.mainWindow.findChild(QVBoxLayout, 'register_order_layout')
@@ -37,14 +48,6 @@ class Main:
 
         # Update windows once tab changes
         self.tabWindow.currentChanged.connect(self.updateWindow)
-
-        # Check database is valid
-        if (not self.db.isValid()):
-            QMessageBox.critical(self.mainWindow, 'ERRO', 'Impossível encontrar arquivo de banco de dados', QMessageBox.StandardButton.Abort)
-            exit(-1)
-
-        self.mainWindow.show()
-        sys.exit(app.exec_())
 
     def updateWindow(self, index):
         # Once the tab has gone to list the orders, update it
