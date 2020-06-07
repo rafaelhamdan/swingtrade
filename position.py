@@ -37,10 +37,16 @@ class FetchPriceThread(QThread):
             # Fetch price for each code
             data = {}
             for code in codes:
-                # Append .SA (Sociedade Anomima) for brazilian stocks
-                stock = yf.Ticker(code + '.SA')
-                prices = stock.history(period="minute")
-                data[code] = prices['Close'][0]
+                try:
+                    # Append .SA (Sociedade Anomima) for brazilian stocks
+                    stock = yf.Ticker(code + '.SA')
+                    prices = stock.history(period="minute")
+                    # Safe guard in case we don't find the stock due to any issue in yfinance
+                    if (len(prices['Close']) > 0):
+                        data[code] = prices['Close'][0]
+                except:
+                    # Avoid threading dying due to no internet connection
+                    pass
             self.signal.signal.emit(data)
             time.sleep(self.INTERVAL_TO_FETCH_IN_SECONDS)
 
