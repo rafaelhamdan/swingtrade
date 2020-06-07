@@ -1,16 +1,20 @@
 import os
 import sys
+import platform
 
 from process_order import ProcessOrder
 from util import gui
 
-from PySide2.QtWidgets import QDialogButtonBox, QMessageBox, QFileDialog, QGridLayout, QPushButton, QVBoxLayout
-from PySide2.QtCore import SIGNAL, QObject
+from PySide2.QtWidgets import QWidget, QDialogButtonBox, QMessageBox, QFileDialog, QGridLayout, QPushButton, QVBoxLayout
+from PySide2.QtCore import SIGNAL, Qt, QObject
 
 class FileDialog(QFileDialog):
-    def __init__(self, *args, **kwargs):
-        super(FileDialog, self).__init__(*args, **kwargs)
+    def __init__(self, parent):
+        super().__init__(parent)
         self.setup()
+        self.setWindowFlags(Qt.Widget)
+        if platform.system() == "Linux":
+            self.setOption(QFileDialog.DontUseNativeDialog)
         self.show()
         self.hideButtons()
     
@@ -35,8 +39,9 @@ class RegisterOrder:
         self.ui = gui.load_ui('./windows/register_order.ui')
         self.db = db
 
+        parent = self.ui.findChild(QWidget, 'Form')
         fileLayout = self.ui.findChild(QVBoxLayout, 'file_layout')
-        self.fileDialog = FileDialog()
+        self.fileDialog = FileDialog(parent)
         self.fileDialog.accepted.connect(self.processFiles)
         fileLayout.addWidget(self.fileDialog)
 
