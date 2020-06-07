@@ -51,7 +51,7 @@ class Main:
         self.reports = Reports(self.db)
         self.tabWindow.addTab(self.reports.getUi(), 'Relatórios')
 
-        self.position = Position(self.db)
+        self.position = Position(self.app, self.db)
         self.tabWindow.addTab(self.position.getUi(), 'Posição')
         self.app.aboutToQuit.connect(self.position.stopThreads)
 

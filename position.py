@@ -8,70 +8,99 @@ from util.table import NumericItem, formatFloatToMoney
 
 from PySide2.QtGui import QColor, QBrush
 from PySide2.QtWidgets import QTableWidget, QTableWidgetItem
-from PySide2.QtCore import QThread, Signal, Qt, QObject, QMutex
+from PySide2.QtCore import QThread, Signal, Slot, Qt, QObject, QTimer
 import yfinance as yf
 
-class FetchingPriceFinished(QObject):
-    signal = Signal(dict)
+class FetchPriceWorker(QObject):
+    fetchingFinished = Signal(dict)
 
-class FetchPriceThread(QThread):
-    INTERVAL_TO_FETCH_IN_SECONDS = 10
+    def __init__(self):
+        super().__init__()
+        self.codes = dict()
+
+    @Slot(dict)
+    def setCodes(self, codes):
+        self.codes = codes
+
+    @Slot()
+    def fetch(self):
+        ## Fetch price for each code
+        data = {}
+        for code in self.codes:
+            try:
+                # Append .SA (Sociedade Anomima) for brazilian stocks
+                stock = yf.Ticker(code + '.SA')
+                prices = stock.history(period="minute")
+                # Safe guard in case we don't find the stock due to any issue in yfinance
+                if (len(prices['Close']) > 0):
+                    data[code] = prices['Close'][0]
+            except:
+                # Avoid threading dying due to no internet connection
+                pass
+        self.fetchingFinished.emit(data)
+
+class FetchPriceController(QObject):
+    INTERVAL_TO_FETCH_IN_SECONDS = 1
+    fetchingFinished = Signal(dict)
+
+    _stopTimer = Signal()
+    _codesUpdated = Signal(dict)
 
     def __init__(self, parent = None):
-        QThread.__init__(self, parent)
-        self.signal = FetchingPriceFinished()
-        self.mutex = QMutex()
-        self.codesToFetch = []
+        super().__init__(parent)
+        self.shouldExit = False
+        self.thread= QThread()
 
-    def setCodesToFetch(self, codes):
-        self.mutex.lock()
-        self.codesToFetch = codes
-        self.mutex.unlock()
+        self.worker = FetchPriceWorker()
+        self.worker.moveToThread(self.thread)
+        self.worker.fetchingFinished.connect(self.fetchingFinished)
+        self._codesUpdated.connect(self.worker.setCodes)
 
-    def run(self):
-        while True:
-            # Copy codes.. is this working? Is python really copying this?
-            self.mutex.lock()
-            codes = list(self.codesToFetch)
-            self.mutex.unlock()
-            # Fetch price for each code
-            data = {}
-            for code in codes:
-                try:
-                    # Append .SA (Sociedade Anomima) for brazilian stocks
-                    stock = yf.Ticker(code + '.SA')
-                    prices = stock.history(period="minute")
-                    # Safe guard in case we don't find the stock due to any issue in yfinance
-                    if (len(prices['Close']) > 0):
-                        data[code] = prices['Close'][0]
-                except:
-                    # Avoid threading dying due to no internet connection
-                    pass
-            self.signal.signal.emit(data)
-            time.sleep(self.INTERVAL_TO_FETCH_IN_SECONDS)
+        # A timer will trigger price fetch on a specified interval.
+        # Though this should probably be run on the thread, doing makes
+        # QThread.wait block if we don't specify a timeout.
+        self.fetchTimer = QTimer(self)
+        self.fetchTimer.setInterval(self.INTERVAL_TO_FETCH_IN_SECONDS * 1000)
+        self.fetchTimer.timeout.connect(self.worker.fetch)
+        self._stopTimer.connect(self.fetchTimer.stop)
 
-class Position:
-    def __init__(self, db):
+        self.thread.started.connect(self.fetchTimer.start)
+        self.thread.started.connect(self.worker.fetch)
+
+    def updateCodes(self, codes):
+        self._codesUpdated.emit(codes)
+
+    @Slot()
+    def quit(self):
+        self._stopTimer.emit()
+        self.thread.quit()
+        self.thread.wait(5000)
+
+
+class Position(QObject):
+    def __init__(self, parent, db):
+        super().__init__(parent)
         self.ui = gui.load_ui('./windows/position.ui')
         self.db = db
 
         self.stockTable = self.ui.findChild(QTableWidget, 'stock_table')
         self.currentValues = {}
         
-        self.fetchingPriceThread = FetchPriceThread()
+        # Create thread to fetch prices
+        self.fetchPriceController = FetchPriceController(self)
+        self.fetchPriceController.fetchingFinished.connect(self.updateCurrentPrices)
 
         self.initTableHeaders()
         self.updateWindow()
 
-        self.fetchingPriceThread.start()
-        self.fetchingPriceThread.signal.signal.connect(self.updateCurrentPrices)
+        self.fetchPriceController.thread.start()
 
     def updateCurrentPrices(self, data):
         self.currentValues = data
         self.updateWindow()
 
     def stopThreads(self):
-        self.fetchingPriceThread.terminate()
+        self.fetchPriceController.quit()
 
     def updateWindow(self):
         self.updateTable()
@@ -157,7 +186,7 @@ class Position:
             currentValue = self.setCurrentValue(rowIndex, 3, row[0])
             self.setProfitValue(rowIndex, 4, row[1], currentValue, row[2])
             rowIndex = rowIndex + 1
-        self.fetchingPriceThread.setCodesToFetch(codesToFetch)
+        self.fetchPriceController.updateCodes(codesToFetch)
 
     def getUi(self):
         return self.ui
