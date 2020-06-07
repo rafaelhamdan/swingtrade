@@ -32,23 +32,18 @@ class Reports:
         if (not self.reportOptions.currentData()):
             QMessageBox.critical(self.ui, 'ERRO', 'Por favor selecione um tipo de relatório', QMessageBox.StandardButton.Abort)
             return
-        reportType = self.reportOptions.currentData()
         calculator = Calculator()
-        report = []
+        reportType = self.reportOptions.currentData()
         # Given the report type, generate it
         if (reportType == 'monthly'):
-            report = calculator.getMonthlyReport(self.db.getOrdersInAscendingDate())
+            reportData = calculator.getMonthlyReport(self.db.getOrdersInAscendingDate())
+            if (len(reportData) == 0):
+                QMessageBox.critical(self.ui, 'ERRO', 'Não há dados cadastrados para gerar o relatório mensal de lucros e prejuízos', QMessageBox.StandardButton.Abort)
+                return
+            self.report = Report()
+            self.report.showMonthlyReport(reportData)
         else:
             assert(0)
-        if (len(report) == 0):
-            QMessageBox.critical(self.ui, 'ERRO', 'Você não possui ordens cadastradas para gerar esse relatório', QMessageBox.StandardButton.Abort)
-            return
-
-        self.showReport(report)
-
-    def showReport(self, data):
-        self.report = Report()
-        self.report.showMonthlyReport(data)
 
     def getUi(self):
         return self.ui
