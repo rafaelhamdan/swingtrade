@@ -12,6 +12,8 @@ from PySide2.QtCore import QThread, Signal, Slot, Qt, QObject, QTimer
 import yfinance as yf
 
 class FetchPriceWorker(QObject):
+    INTERVAL_TO_FETCH_IN_SECONDS = 10
+    INTERVAL_RETRY_NO_DATA_IN_SECONDS = 1
     fetchingFinished = Signal(dict)
 
     def __init__(self):
@@ -26,55 +28,52 @@ class FetchPriceWorker(QObject):
     def fetch(self):
         ## Fetch price for each code
         data = {}
-        for code in self.codes:
-            try:
-                # Append .SA (Sociedade Anomima) for brazilian stocks
-                stock = yf.Ticker(code + '.SA')
-                prices = stock.history(period="minute")
-                # Safe guard in case we don't find the stock due to any issue in yfinance
-                if (len(prices['Close']) > 0):
-                    data[code] = prices['Close'][0]
-            except:
-                # Avoid threading dying due to no internet connection
-                pass
-        self.fetchingFinished.emit(data)
+        try:
+            # Append .SA (Sociedade Anomima) for brazilian stocks
+            stockData = yf.download(" ".join([x + ".SA" for x in self.codes]), period="minute", progress=False)
+            if stockData.shape[0]:
+                closeData = stockData.iloc[0]['Close']
+                # Assemble dictionary with stock name and price in the right order.
+                data = dict(zip([x[:-3] for x in list(closeData.index)], list(closeData)))
+        except:
+            # Avoid threading dying due to no internet connection
+            pass
+
+        if data:
+            self.fetchingFinished.emit(data)
+            interval = __class__.INTERVAL_TO_FETCH_IN_SECONDS
+        else:
+            interval = __class__.INTERVAL_RETRY_NO_DATA_IN_SECONDS
+
+        QTimer.singleShot(interval * 1000, self.fetch)
 
 class FetchPriceController(QObject):
-    INTERVAL_TO_FETCH_IN_SECONDS = 1
     fetchingFinished = Signal(dict)
+    THREAD_SYNC_TIMEOUT_SECONDS = 5
 
-    _stopTimer = Signal()
     _codesUpdated = Signal(dict)
 
     def __init__(self, parent = None):
         super().__init__(parent)
         self.shouldExit = False
-        self.thread= QThread()
+        self.thread = QThread()
 
         self.worker = FetchPriceWorker()
         self.worker.moveToThread(self.thread)
         self.worker.fetchingFinished.connect(self.fetchingFinished)
         self._codesUpdated.connect(self.worker.setCodes)
 
-        # A timer will trigger price fetch on a specified interval.
-        # Though this should probably be run on the thread, doing makes
-        # QThread.wait block if we don't specify a timeout.
-        self.fetchTimer = QTimer(self)
-        self.fetchTimer.setInterval(self.INTERVAL_TO_FETCH_IN_SECONDS * 1000)
-        self.fetchTimer.timeout.connect(self.worker.fetch)
-        self._stopTimer.connect(self.fetchTimer.stop)
-
-        self.thread.started.connect(self.fetchTimer.start)
         self.thread.started.connect(self.worker.fetch)
+        self.thread.finished.connect(self.thread.deleteLater)
 
     def updateCodes(self, codes):
         self._codesUpdated.emit(codes)
 
     @Slot()
     def quit(self):
-        self._stopTimer.emit()
         self.thread.quit()
-        self.thread.wait(5000)
+        if not self.thread.wait(self.THREAD_SYNC_TIMEOUT_SECONDS * 1000):
+            self.thread.terminate()
 
 
 class Position(QObject):
