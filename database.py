@@ -56,16 +56,19 @@ class Database:
         query.exec_('SELECT * FROM orders WHERE strftime("%Y", date) <= "' + str(year) + '" ORDER BY date(date) ASC')
         return self.getOrdersFromResult(query)
 
-    def updateOrders(self, orders):
+    def eraseOrdersWithinDateRange(self, firstDate, secondDate):
+        query = QSqlQuery()
+        firstDateStr = firstDate.strftime('%Y-%m-%d')
+        secondDateStr = secondDate.strftime('%Y-%m-%d')
+        query.exec_('DELETE FROM orders WHERE date >= ' + firstDateStr + ' OR date <= ' + secondDateStr)
+        return query.numRowsAffected()
+
+    def deleteOrders(self):
         wipeQuery = QSqlQuery()
         wipeQuery.exec_('DELETE FROM orders')
-        if (wipeQuery.lastError().isValid()):
-            return False
+        return not wipeQuery.lastError().isValid()
 
-        # Just cleaning up?
-        if (len(orders) == 0):
-            return True
-
+    def updateOrders(self, orders):
         insertData = "INSERT INTO orders ('date', 'type', 'code', 'name', 'amount', 'value') VALUES "
         for order in orders:
             insertData += "("

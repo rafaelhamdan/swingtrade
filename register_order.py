@@ -57,7 +57,8 @@ class RegisterOrder:
         None
 
     def confirmRequest(self, title):
-        response = QMessageBox.question(self.ui, title, "Tem certeza que deseja continuar?\nIsso irá apagar todas as suas operações registradas.",
+        response = QMessageBox.question(self.ui, title,
+                                        "Tem certeza que deseja continuar?\nIsso irá apagar todas as suas operações registradas nas datas presentes na planilha.",
                                         QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Abort)
         if (response != QMessageBox.StandardButton.Ok):
             return False
@@ -91,16 +92,30 @@ class RegisterOrder:
                 break
             orders.extend(ret)
 
+        self.updateOrders(orders)
+
+    def updateOrders(self, orders):
+        if (len(orders) == 0):
+            QMessageBox.critical(self.ui, "ERRO", "A planilha não contém nada a ser importado", QMessageBox.StandardButton.Abort)
+            return
+        # First erase orders within date-range
+        dateRange = [order[0] for order in orders]
+        dateRange.sort()
+        numDeletedOrders = self.db.eraseOrdersWithinDateRange(dateRange[0], dateRange[-1])
+        firstDateStr = dateRange[0].strftime('%d/%m/%Y')
+        secondDateStr = dateRange[-1].strftime('%d/%m/%Y')
+        QMessageBox.information(self.ui, "REMOÇÕES", "Removidas " + str(numDeletedOrders) + ' ordens entre ' + firstDateStr + ' e ' + secondDateStr + '!')
+        # Finally insert all orders
         if (not self.db.updateOrders(orders)):
-            QMessageBox.critical(self.ui, "ERRO", "Houve um erro ao atualizar o banco de dados", QMessageBox.StandardButton.Abort)
-            self.db.updateOrders([])
+            QMessageBox.critical(self.ui, "ERRO", "Houve um erro ao atualizar o banco de dados. Todas ordens foram removidas.", QMessageBox.StandardButton.Abort)
+            self.db.deleteOrders()
         else:
-            QMessageBox.information(self.ui, "SUCESSO", "Planilha importada com sucesso!\nInseridas " + str(self.db.getNumOrders()) + " ordens!")
+            QMessageBox.information(self.ui, "SUCESSO", "Planilha importada com sucesso!\nInseridas " + str(len(orders)) + " ordens!")
 
     def wipeOrders(self):
         if (not self.confirmRequest("Apagar operações")):
             return
-        if (not self.db.updateOrders([])):
+        if (not self.db.deleteOrders()):
             QMessageBox.critical(self.ui, "ERRO", "Houve um erro ao limpar o banco de dados", QMessageBox.StandardButton.Abort)
         else:
             QMessageBox.information(self.ui, "SUCESSO", "Todas as ordens foram removidas!")
