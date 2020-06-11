@@ -4,7 +4,7 @@ from calculator import Calculator
 from util import gui
 from util.table import NumericItem, formatFloatToMoney
 
-from PySide2.QtWidgets import QComboBox, QMessageBox, QPushButton, QTableWidget, QTableWidgetItem
+from PySide2.QtWidgets import QAbstractItemView, QComboBox, QMessageBox, QPushButton, QTableWidget, QTableWidgetItem
 from PySide2.QtCore import SIGNAL, QObject
 from PySide2 import QtCore
 
@@ -20,7 +20,7 @@ class Extract:
 
         self.stockTable = self.ui.findChild(QTableWidget, 'stock_table')
 
-        self.initTableHeaders()
+        self.initTable()
         self.updateWindow()
 
     def updateWindow(self):
@@ -41,10 +41,11 @@ class Extract:
                 self.year.setCurrentIndex(index)
             index = index + 1
 
-    def initTableHeaders(self):
+    def initTable(self):
         self.stockTable.setRowCount(0)
         self.stockTable.setColumnCount(4)
         self.stockTable.setHorizontalHeaderLabels(['Código', 'Qnt.', 'Valor médio (R$)', 'Total (R$)'])
+        self.stockTable.setSelectionBehavior(QAbstractItemView.SelectRows)
 
     def checkYearAndUpdateTable(self):
         if (not self.year.currentData()):

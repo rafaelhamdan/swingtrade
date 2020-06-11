@@ -7,7 +7,7 @@ from util import gui
 from util.table import NumericItem, formatFloatToMoney
 
 from PySide2.QtGui import QColor, QBrush
-from PySide2.QtWidgets import QTableWidget, QTableWidgetItem
+from PySide2.QtWidgets import QAbstractItemView, QTableWidget, QTableWidgetItem
 from PySide2.QtCore import QThread, Signal, Slot, Qt, QObject, QTimer
 import yfinance as yf
 
@@ -89,7 +89,7 @@ class Position(QObject):
         self.fetchPriceController = FetchPriceController(self)
         self.fetchPriceController.fetchingFinished.connect(self.updateCurrentPrices)
 
-        self.initTableHeaders()
+        self.initTable()
         self.updateWindow()
 
         self.fetchPriceController.thread.start()
@@ -104,13 +104,14 @@ class Position(QObject):
     def updateWindow(self):
         self.updateTable()
 
-    def initTableHeaders(self):
+    def initTable(self):
         self.stockTable.setRowCount(0)
         self.stockTable.setColumnCount(5)
         self.stockTable.setHorizontalHeaderLabels(['Código', 'Qnt.', 'Valor médio (R$)', 'Valor atual (R$)', 'Lucro/prejuízo (R$)'])
         self.stockTable.setColumnWidth(2, self.stockTable.parent().width()*0.25)
         self.stockTable.setColumnWidth(3, self.stockTable.parent().width()*0.25)
         self.stockTable.setColumnWidth(4, self.stockTable.parent().width()*0.25)
+        self.stockTable.setSelectionBehavior(QAbstractItemView.SelectRows)
 
     def updateTable(self):
         self.stockTable.setSortingEnabled(False)

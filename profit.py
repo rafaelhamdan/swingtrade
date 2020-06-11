@@ -5,7 +5,7 @@ from calculator import Calculator
 from util.table import NumericItem, formatFloatToMoney
 
 from PySide2.QtGui import QColor, QBrush
-from PySide2.QtWidgets import QLabel, QLineEdit, QTableWidget, QTableWidgetItem
+from PySide2.QtWidgets import QAbstractItemView, QLabel, QLineEdit, QTableWidget, QTableWidgetItem
 from PySide2.QtCore import SIGNAL, QObject
 from PySide2 import QtCore
 
@@ -21,10 +21,10 @@ class Profit:
         self.totalSales = self.ui.findChild(QLabel, 'total_sales')
         self.totalProfit = self.ui.findChild(QLabel, 'total_profit')
 
-        self.initTableHeaders()
+        self.initTable()
         self.updateWindow()
 
-    def initTableHeaders(self):
+    def initTable(self):
         self.orderTable.setRowCount(0)
         self.orderTable.setColumnCount(6)
         self.orderTable.setHorizontalHeaderLabels(['Data', 'Código', 'Valor médio de compra (R$)', 'Qnt.', 'Valor de venda (R$)', 'Lucro/prejuízo (R$)'])
@@ -33,6 +33,7 @@ class Profit:
         self.orderTable.setColumnWidth(3, self.orderTable.parent().width()*0.10)
         self.orderTable.setColumnWidth(4, self.orderTable.parent().width()*0.25)
         self.orderTable.setColumnWidth(5, self.orderTable.parent().width()*0.25)
+        self.orderTable.setSelectionBehavior(QAbstractItemView.SelectRows)
 
     def getBackgroundColor(self, value):
         if (value < 0):
