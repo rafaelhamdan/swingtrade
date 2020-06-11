@@ -63,6 +63,15 @@ class Database:
         query.exec_('DELETE FROM orders WHERE date >= "' + firstDateStr + '" AND date <= "' + secondDateStr + '"')
         return query.numRowsAffected()
 
+    def eraseOrdersById(self, idsToErase):
+        query = QSqlQuery()
+        whereExpr = ''
+        for idToErase in idsToErase:
+            whereExpr += ' OR ' if len(whereExpr) > 0 else ''
+            whereExpr += 'id = ' + str(idToErase)
+        query.exec_('DELETE FROM orders WHERE ' + whereExpr)
+        return query.numRowsAffected()
+
     def deleteOrders(self):
         wipeQuery = QSqlQuery()
         wipeQuery.exec_('DELETE FROM orders')

@@ -4,7 +4,7 @@ from util import gui
 from calculator import Calculator
 from util.table import NumericItem, formatFloatToMoney
 
-from PySide2.QtWidgets import QAbstractItemView, QLineEdit, QTableWidget, QTableWidgetItem
+from PySide2.QtWidgets import QAbstractItemView, QLineEdit, QMessageBox, QPushButton, QTableWidget, QTableWidgetItem
 from PySide2.QtCore import SIGNAL, QObject
 from PySide2 import QtCore
 
@@ -17,13 +17,17 @@ class ListOrder:
         self.filterText = self.ui.findChild(QLineEdit, 'filter_text')
         self.filterText.textChanged.connect(self.applyFilter)
 
+        self.eraseOrders = self.ui.findChild(QPushButton, 'erase_orders')
+        self.eraseOrders.clicked.connect(self.eraseSelectedOrders)
+
         self.initTable()
         self.updateWindow()
 
     def initTable(self):
         self.orderTable.setRowCount(0)
-        self.orderTable.setColumnCount(6)
-        self.orderTable.setHorizontalHeaderLabels(['Data', 'Tipo', 'Código', 'Qnt.', 'Valor (R$)', 'Total (R$)'])
+        self.orderTable.setColumnCount(7)
+        self.orderTable.setHorizontalHeaderLabels(['Data', 'Tipo', 'Código', 'Qnt.', 'Valor (R$)', 'Total (R$)', 'ID'])
+        self.orderTable.setColumnHidden(6, True)
         self.orderTable.setSelectionBehavior(QAbstractItemView.SelectRows)
 
     def updateWindow(self):
@@ -67,6 +71,10 @@ class ListOrder:
             totalItem = NumericItem(formatFloatToMoney(totalValue))
             totalItem.setData(QtCore.Qt.UserRole, totalValue)
             self.orderTable.setItem(row, 5, totalItem)
+            # Hidden ID column
+            idItem = QTableWidgetItem('')
+            idItem.setData(QtCore.Qt.UserRole, order[0])
+            self.orderTable.setItem(row, 6, idItem)
             row = row + 1
         # Re-apply filter
         self.applyFilter(self.filterText.text())
@@ -81,6 +89,25 @@ class ListOrder:
                 if (text.lower() in item.text().lower()):
                     match = True
             self.orderTable.setRowHidden(i, not match)
+
+    def eraseSelectedOrders(self):
+        # Check if any row selected
+        selectedRows = self.orderTable.selectionModel().selectedRows()
+        if (len(selectedRows) == 0):
+            QMessageBox.critical(self.ui, 'ERRO', 'Selecione uma ou mais ordens para apagar', QMessageBox.StandardButton.Abort)
+            return
+        # Confirm request...
+        response = QMessageBox.question(self.ui, 'Apagar ordens', 
+                                        'Tem certeza que deseja apagar as ' + str(len(selectedRows)) + ' ordens selecionadas?',
+                                        QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Abort)
+        if (response != QMessageBox.StandardButton.Ok):
+            return False
+        # Erase them!!
+        idsToErase = []
+        for row in selectedRows:
+            idsToErase.append(self.orderTable.item(row.row(), 6).data(QtCore.Qt.UserRole))
+        self.db.eraseOrdersById(idsToErase)
+        self.updateTable()
 
     def getUi(self):
         return self.ui
