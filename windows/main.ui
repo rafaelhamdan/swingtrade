@@ -60,7 +60,7 @@
         </widget>
         <widget class="QWidget" name="register_order">
          <attribute name="title">
-          <string>Cadastrar ordens</string>
+          <string>Importar ordens</string>
          </attribute>
          <layout class="QVBoxLayout" name="verticalLayout_8">
           <item>
