@@ -2,6 +2,7 @@ import datetime
 import sys
 
 class Calculator:
+    NO_TAXES_SELLING_PER_YEAR_LIMIT = 20000.00
     def __init__(self):
         # This is a map of "Stock code" to "Average price" and "Amount"
         # The map will be updated as we iterate on each order
@@ -73,4 +74,49 @@ class Calculator:
                 ret[dateString] = [0, 0]
             ret[dateString][0] += totalSellingValueWithoutTaxes
             ret[dateString][1] += profit
+        return ret
+
+    def getFreeTaxesReport(self, ordersInAscendingDate, year):
+        profits = self.getMonthlyReport(ordersInAscendingDate)
+        ret = {}
+        for key, value in profits.items():
+            # Ignore months outside asked year
+            date = datetime.datetime.strptime(key, '%b %y')
+            if date.year != year:
+                continue
+            # Ignore months with value bigger than tax limit or that gave losses
+            if value[0] > self.NO_TAXES_SELLING_PER_YEAR_LIMIT or value[1] < 0:
+                continue
+            ret[key] = value
+        return ret
+
+    def getPayingTaxesReport(self, ordersInAscendingDate, year):
+        profits = self.getMonthlyReport(ordersInAscendingDate)
+        # Return {month: [lossToDiscount, discountedLoss, realProfitAfterDiscountedLosses]}
+        ret = {}
+        lossToDiscount = 0.0
+        for key, value in profits.items():
+            date = datetime.datetime.strptime(key, '%b %y')
+            # If that gave a prejudice, let's accumulate it
+            if (value[1] <= 0):
+                lossToDiscount += -value[1]
+                # This month is to be reported, show discounted loss until now
+                if date.year == year:
+                    ret[key] = [lossToDiscount, 0, 0]
+            # Ignore months with value sold smaller than when we pay taxes
+            if value[0] <= self.NO_TAXES_SELLING_PER_YEAR_LIMIT:
+                continue
+            # Remove from loss to discount as we had profits..
+            oldLossToDiscount = lossToDiscount
+            lossToDiscount -= value[1]
+            if (lossToDiscount < 0):
+                lossToDiscount = 0
+            # Ignore months outside asked year
+            if date.year != year:
+                continue
+            discountedLoss = oldLossToDiscount - lossToDiscount
+            realProfitAfterDiscountedLosses = value[1] - discountedLoss
+            if (realProfitAfterDiscountedLosses < 0):
+                realProfitAfterDiscountedLosses = 0
+            ret[key] = [lossToDiscount, discountedLoss, realProfitAfterDiscountedLosses]
         return ret
