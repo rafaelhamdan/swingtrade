@@ -22,8 +22,8 @@ class ListOrder:
 
     def initTableHeaders(self):
         self.orderTable.setRowCount(0)
-        self.orderTable.setColumnCount(7)
-        self.orderTable.setHorizontalHeaderLabels(['Data', 'Tipo', 'Código', 'Empresa', 'Qnt.', 'Valor (R$)', 'Total (R$)'])
+        self.orderTable.setColumnCount(6)
+        self.orderTable.setHorizontalHeaderLabels(['Data', 'Tipo', 'Código', 'Qnt.', 'Valor (R$)', 'Total (R$)'])
 
     def updateWindow(self):
         self.updateTable()
@@ -40,18 +40,21 @@ class ListOrder:
         self.orderTable.setRowCount(len(orders))
         row = 0
         for order in orders:
+            # We are not using company name since it appears in only some spreadsheets
+            del order[4]
+            # Is it a sell or buy operation?
             isSell = order[2] == 'V'
             # TODO: Extract columns' indexes to variables
-            for i in range(1,7):
+            for i in range(1,6):
                 # Column 2 comes as C or V from database
                 if i == 2:
                     item = QTableWidgetItem('Venda' if isSell else 'Compra')
-                # Column 5 and 6 are amount and value, respectively
+                # Column 4 and 5 are amount and value, respectively
                 # Should be sotred as numeric and value formatted to 2 decimal fields
-                elif i == 5:
+                elif i == 4:
                     item = NumericItem(str(order[i]))
                     item.setData(QtCore.Qt.UserRole, order[i])
-                elif i == 6:
+                elif i == 5:
                     item = NumericItem(formatFloatToMoney(order[i]))
                     item.setData(QtCore.Qt.UserRole, order[i])
                 else:
@@ -59,10 +62,10 @@ class ListOrder:
                 self.orderTable.setItem(row, i-1, item)
             # Add total includig taxes
             calculator = Calculator()
-            totalValue = calculator.getTransactionValueWithTaxes(order[5], order[6], isSell)
+            totalValue = calculator.getTransactionValueWithTaxes(order[4], order[5], isSell)
             totalItem = NumericItem(formatFloatToMoney(totalValue))
             totalItem.setData(QtCore.Qt.UserRole, totalValue)
-            self.orderTable.setItem(row, 6, totalItem)
+            self.orderTable.setItem(row, 5, totalItem)
             row = row + 1
         # Re-apply filter
         self.applyFilter(self.filterText.text())

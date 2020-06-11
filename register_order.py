@@ -23,7 +23,7 @@ class FileDialog(QFileDialog):
         pass
 
     def setup(self):
-        self.setNameFilter('Extrato CEI Negociação de Ativos (*.xls)')
+        self.setNameFilter('Extrato CEI Negociação de Ativos ou BM&FBOVESPA (*.xls)')
 
     def hideButtons(self):
         # Hide open and cancel buttons that may wipe the file dialog widget
@@ -89,7 +89,7 @@ class RegisterOrder:
                 if (len(errorFieldMsg) > 0):
                     errorMsg += ' (' + errorFieldMsg + ')'
                 QMessageBox.critical(self.ui, "ERRO", errorMsg, QMessageBox.StandardButton.Abort)
-                break
+                return
             orders.extend(ret)
 
         self.updateOrders(orders)

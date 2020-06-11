@@ -60,7 +60,7 @@ class Database:
         query = QSqlQuery()
         firstDateStr = firstDate.strftime('%Y-%m-%d')
         secondDateStr = secondDate.strftime('%Y-%m-%d')
-        query.exec_('DELETE FROM orders WHERE date >= ' + firstDateStr + ' OR date <= ' + secondDateStr)
+        query.exec_('DELETE FROM orders WHERE date >= "' + firstDateStr + '" AND date <= "' + secondDateStr + '"')
         return query.numRowsAffected()
 
     def deleteOrders(self):
