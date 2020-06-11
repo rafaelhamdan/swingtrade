@@ -4,7 +4,7 @@ from util import gui
 from calculator import Calculator
 from util.table import NumericItem, formatFloatToMoney
 
-from PySide2.QtWidgets import QLineEdit, QTableWidget, QTableWidgetItem
+from PySide2.QtWidgets import QAbstractItemView, QLineEdit, QTableWidget, QTableWidgetItem
 from PySide2.QtCore import SIGNAL, QObject
 from PySide2 import QtCore
 
@@ -17,13 +17,14 @@ class ListOrder:
         self.filterText = self.ui.findChild(QLineEdit, 'filter_text')
         self.filterText.textChanged.connect(self.applyFilter)
 
-        self.initTableHeaders()
+        self.initTable()
         self.updateWindow()
 
-    def initTableHeaders(self):
+    def initTable(self):
         self.orderTable.setRowCount(0)
         self.orderTable.setColumnCount(6)
         self.orderTable.setHorizontalHeaderLabels(['Data', 'Tipo', 'Código', 'Qnt.', 'Valor (R$)', 'Total (R$)'])
+        self.orderTable.setSelectionBehavior(QAbstractItemView.SelectRows)
 
     def updateWindow(self):
         self.updateTable()
