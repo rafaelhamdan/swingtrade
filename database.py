@@ -77,7 +77,7 @@ class Database:
         wipeQuery.exec_('DELETE FROM orders')
         return not wipeQuery.lastError().isValid()
 
-    def updateOrders(self, orders):
+    def addOrders(self, orders):
         insertData = "INSERT INTO orders ('date', 'type', 'code', 'name', 'amount', 'value') VALUES "
         for order in orders:
             insertData += "("

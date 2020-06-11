@@ -4,7 +4,7 @@ from util import gui
 from calculator import Calculator
 from util.table import NumericItem, formatFloatToMoney
 
-from PySide2.QtWidgets import QAbstractItemView, QLineEdit, QMessageBox, QPushButton, QTableWidget, QTableWidgetItem
+from PySide2.QtWidgets import QAbstractItemView, QCalendarWidget, QComboBox, QDialogButtonBox, QLineEdit, QMessageBox, QPushButton, QTableWidget, QTableWidgetItem
 from PySide2.QtCore import SIGNAL, QObject
 from PySide2 import QtCore
 
@@ -19,6 +19,9 @@ class ListOrder:
 
         self.eraseOrders = self.ui.findChild(QPushButton, 'erase_orders')
         self.eraseOrders.clicked.connect(self.eraseSelectedOrders)
+
+        self.addOrderButton = self.ui.findChild(QPushButton, 'add_order')
+        self.addOrderButton.clicked.connect(self.openAddOrderDialog)
 
         self.initTable()
         self.updateWindow()
@@ -108,6 +111,41 @@ class ListOrder:
             idsToErase.append(self.orderTable.item(row.row(), 6).data(QtCore.Qt.UserRole))
         self.db.eraseOrdersById(idsToErase)
         self.updateTable()
+
+    def openAddOrderDialog(self):
+        self.addOrderUi = gui.load_ui('./windows/dialog_add_order.ui')
+        self.addOrderUiAddButon = self.addOrderUi.findChild(QPushButton, 'add')
+        self.addOrderUiAddButon.clicked.connect(self.addOrder)
+        self.addOrderUiCancelButon = self.addOrderUi.findChild(QPushButton, 'cancel')
+        self.addOrderUiCancelButon.clicked.connect(self.addOrderUi.close)
+        self.addOrderUi.show()
+
+    def addOrder(self):
+        # These are well behaved, no need to do any checking
+        orderDate = self.addOrderUi.findChild(QCalendarWidget, 'date').selectedDate().toPython()
+        orderType = self.addOrderUi.findChild(QComboBox, 'type').currentText()
+        # Check code
+        orderCode = self.addOrderUi.findChild(QLineEdit, 'code').text()
+        if (len(orderCode) < 4):
+            QMessageBox.critical(self.addOrderUi, 'ERRO', 'Preencha o código do papel (ao menos 4 dígitos)', QMessageBox.StandardButton.Abort)
+            return
+        # Check amount
+        orderAmount = 0
+        try:
+            orderAmount = int(self.addOrderUi.findChild(QLineEdit, 'amount').text())
+        except:
+            QMessageBox.critical(self.addOrderUi, 'ERRO', 'Preencha a quantidade com um valor numérico', QMessageBox.StandardButton.Abort)
+            return
+        # Check value (comma-separated)
+        orderValue = 0.0
+        try:
+            orderValue = float(self.addOrderUi.findChild(QLineEdit, 'value').text().replace(',', '.'))
+        except:
+            QMessageBox.critical(self.addOrderUi, 'ERRO', 'Preencha o valor corretamente (separe apenas os centavos com . ou ,)', QMessageBox.StandardButton.Abort)
+            return
+        self.db.addOrders([[orderDate, 'C' if orderType == 'Compra' else 'V', orderCode, '', orderAmount, orderValue]])
+        self.updateTable()
+        self.addOrderUi.close()
 
     def getUi(self):
         return self.ui

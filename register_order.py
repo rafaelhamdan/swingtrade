@@ -106,7 +106,7 @@ class RegisterOrder:
         secondDateStr = dateRange[-1].strftime('%d/%m/%Y')
         QMessageBox.information(self.ui, "REMOÇÕES", "Removidas " + str(numDeletedOrders) + ' ordens entre ' + firstDateStr + ' e ' + secondDateStr + '!')
         # Finally insert all orders
-        if (not self.db.updateOrders(orders)):
+        if (not self.db.addOrders(orders)):
             QMessageBox.critical(self.ui, "ERRO", "Houve um erro ao atualizar o banco de dados. Todas ordens foram removidas.", QMessageBox.StandardButton.Abort)
             self.db.deleteOrders()
         else:
