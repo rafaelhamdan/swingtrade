@@ -3,6 +3,7 @@ import sys
 
 class Calculator:
     NO_TAXES_SELLING_PER_YEAR_LIMIT = 20000.00
+    TAX_PAY_PERCENTAGE = 15.0
     def __init__(self):
         # This is a map of "Stock code" to "Average price" and "Amount"
         # The map will be updated as we iterate on each order
@@ -78,6 +79,7 @@ class Calculator:
 
     def getFreeTaxesReport(self, ordersInAscendingDate, year):
         profits = self.getMonthlyReport(ordersInAscendingDate)
+        # Return {month: [totalSales, realProfit]}
         ret = {}
         for key, value in profits.items():
             # Ignore months outside asked year
@@ -92,7 +94,7 @@ class Calculator:
 
     def getPayingTaxesReport(self, ordersInAscendingDate, year):
         profits = self.getMonthlyReport(ordersInAscendingDate)
-        # Return {month: [lossToDiscount, discountedLoss, realProfitAfterDiscountedLosses]}
+        # Return {month: [totalSales, lossToDiscount, discountedLoss, profit, taxToPay]}
         ret = {}
         lossToDiscount = 0.0
         for key, value in profits.items():
@@ -102,7 +104,7 @@ class Calculator:
                 lossToDiscount += -value[1]
                 # This month is to be reported, show discounted loss until now
                 if date.year == year:
-                    ret[key] = [lossToDiscount, 0, 0]
+                    ret[key] = [value[0], lossToDiscount, 0, value[1], 0]
             # Ignore months with value sold smaller than when we pay taxes
             if value[0] <= self.NO_TAXES_SELLING_PER_YEAR_LIMIT:
                 continue
@@ -118,5 +120,5 @@ class Calculator:
             realProfitAfterDiscountedLosses = value[1] - discountedLoss
             if (realProfitAfterDiscountedLosses < 0):
                 realProfitAfterDiscountedLosses = 0
-            ret[key] = [lossToDiscount, discountedLoss, realProfitAfterDiscountedLosses]
+            ret[key] = [value[0], lossToDiscount, discountedLoss, value[1], realProfitAfterDiscountedLosses*(self.TAX_PAY_PERCENTAGE/100)]
         return ret

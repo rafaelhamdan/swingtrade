@@ -1,0 +1,44 @@
+{% block javascript %}
+<script src="./js/highcharts.js"></script>
+<script>
+{% include "js/highcharts.js" %}
+document.addEventListener('DOMContentLoaded', function () {
+    Highcharts.chart('container', {
+    chart: {
+        type: 'column'
+    },
+    title: {
+        text: '{{chart_title}}'
+    },
+    subtitle: {
+        text: '{{chart_year}}'
+    },
+    xAxis: {
+        categories: {{ chart_months|safe }},
+        crosshair: true
+    },
+    yAxis: {
+        title: {
+            text: 'Valor (R$)'
+        }
+    },
+    tooltip: {
+        headerFormat: '<span style="font-size:10px">{point.key}</span><table width="400px">',
+        pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
+            '<td style="padding:0"><b>R${point.y:,.2f}</b></td></tr>',
+        footerFormat: '</table>',
+        shared: true,
+        useHTML: true
+    },
+    plotOptions: {
+        column: {
+            pointPadding: 0.2,
+            borderWidth: 0
+        }
+    },
+    series: {{ chart_data|safe }}
+});
+});
+</script>
+{% endblock %}
+<div id="container" style="height: 500px"></div>

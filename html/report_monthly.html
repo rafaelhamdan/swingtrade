@@ -6,11 +6,9 @@ Highcharts.chart('container', {
     title: {
         text: 'Relatório'
     },
-
     subtitle: {
         text: 'Total de vendas e lucros/prejuízos por mês operado'
     },
-
     yAxis: {
         title: {
             text: 'Valor (R$)'
@@ -25,26 +23,18 @@ Highcharts.chart('container', {
             }
         },
     },
-
     xAxis: {
         title: {
             text: 'Mês/Ano'
         },
         categories: {{ chart_months|safe }}
     },
-
     legend: {
         layout: 'vertical',
         align: 'right',
         verticalAlign: 'middle'
     },
-
-    plotOptions: {
-        
-    },
-
     series: {{ chart_data|safe }},
-
     responsive: {
         rules: [{
             condition: {
@@ -59,7 +49,6 @@ Highcharts.chart('container', {
             }
         }]
     }
-
 });
 });
 </script>
