@@ -36,6 +36,7 @@ class Database:
         result = query.result()
         while (result.fetchNext()):
             return [query.result().data(0), query.result().data(1), query.result().data(2)]
+        return [0, 0, 0]
 
     def getNumOrders(self):
         query = QSqlQuery()
