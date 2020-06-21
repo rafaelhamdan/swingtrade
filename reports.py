@@ -55,7 +55,7 @@ class Reports:
         if (not self.reportOptions.currentData()):
             QMessageBox.critical(self.ui, 'ERRO', 'Por favor selecione um tipo de relatório', QMessageBox.StandardButton.Abort)
             return
-        calculator = Calculator()
+        calculator = Calculator(self.db)
         reportType = self.reportOptions.currentData()
 
         # Given the report type, generate it

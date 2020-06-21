@@ -63,7 +63,7 @@ class Extract:
         if (not year):
             return
         ordersUpToYear = self.db.getOrdersInAscendingDateUpToYear(year)
-        calculator = Calculator()
+        calculator = Calculator(self.db)
         ret = calculator.getYearExtract(ordersUpToYear)
         # Now extract from return the 
         # TODO: Error out if we have negative number of stocks

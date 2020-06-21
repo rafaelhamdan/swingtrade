@@ -18,6 +18,25 @@ class Database:
         query.exec_('SELECT 1 FROM orders')
         return not query.lastError().isValid()
 
+    def updateTaxValues(self, taxFee, taxRate, lossToDiscount):
+        wipeQuery = QSqlQuery()
+        wipeQuery.exec_('DELETE FROM config')
+
+        insertData = "INSERT INTO config ('tax_fee', 'tax_rate', 'loss_to_discount') VALUES "
+        insertData += "('" + str(taxFee) + "', '" + str(taxRate) + "', '" + str(lossToDiscount) + "');"
+        insertQuery = QSqlQuery()
+        insertQuery.exec_(insertData)
+
+    def getTaxValues(self):
+        query = QSqlQuery()
+        query.exec_('SELECT * FROM config LIMIT 1')
+        if (query.lastError().isValid()):
+            return [0, 0, 0]
+        
+        result = query.result()
+        while (result.fetchNext()):
+            return [query.result().data(0), query.result().data(1), query.result().data(2)]
+
     def getNumOrders(self):
         query = QSqlQuery()
         query.exec_('SELECT COUNT(*) FROM orders')

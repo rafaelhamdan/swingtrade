@@ -61,7 +61,7 @@ class Profit:
 
     def fillTable(self):
         # Calculate profits and losses per sell operation
-        calculator = Calculator()
+        calculator = Calculator(self.db)
         orders = self.db.getOrdersInAscendingDate()
         rows = calculator.getProfitsAndLosses(orders)
         # Print data

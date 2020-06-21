@@ -4,17 +4,33 @@ import sys
 class Calculator:
     NO_TAXES_SELLING_PER_YEAR_LIMIT = 20000.00
     TAX_PAY_PERCENTAGE = 15.0
-    def __init__(self):
+    TAX_SALES_PERCENTAGE = 0.0275
+    TAX_EMOLUMENTS_PERCENTAGE = 0.004105
+    TAX_IR_PERCENTAGE = 0.005
+
+    def __init__(self, db):
         # This is a map of "Stock code" to "Average price" and "Amount"
         # The map will be updated as we iterate on each order
         self.stocks = {}
+        self.db = db
+        self.taxValues = self.db.getTaxValues()
+
+    def getCustomTaxFee(self):
+        return self.taxValues[0]
+
+    def getCustomTaxRate(self):
+        return self.taxValues[1]
+
+    def getInitLossToDiscount(self):
+        return self.taxValues[2]
 
     def getTransactionValueWithTaxes(self, amount, unitValue, isSell):
         # Taxes for sales and emoluments
-        taxes = (0.0275 + 0.004105) / 100
+        taxes = (self.TAX_SALES_PERCENTAGE + self.TAX_EMOLUMENTS_PERCENTAGE + self.TAX_IR_PERCENTAGE + self.getCustomTaxRate()) / 100
         totalWithoutTaxes = amount * unitValue
         taxRate = (1 - taxes) if isSell else (1 + taxes)
-        return totalWithoutTaxes * taxRate
+        taxFee = -self.getCustomTaxFee() if isSell else self.getCustomTaxFee()
+        return (totalWithoutTaxes * taxRate) + taxFee
 
     def updateAverageValue(self, oldAmount, oldValue, addingAmount, addingValue):
         # Buying a stock requires updating amount and value (weighted-average)
@@ -96,7 +112,7 @@ class Calculator:
         profits = self.getMonthlyReport(ordersInAscendingDate)
         # Return {month: [totalSales, lossToDiscount, discountedLoss, profit, taxToPay]}
         ret = {}
-        lossToDiscount = 0.0
+        lossToDiscount = self.getInitLossToDiscount()
         for key, value in profits.items():
             date = datetime.datetime.strptime(key, '%b %y')
             # If that gave a prejudice, let's accumulate it

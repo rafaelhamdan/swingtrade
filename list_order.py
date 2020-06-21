@@ -69,7 +69,7 @@ class ListOrder:
                     item = QTableWidgetItem(str(order[i]))
                 self.orderTable.setItem(row, i-1, item)
             # Add total includig taxes
-            calculator = Calculator()
+            calculator = Calculator(self.db)
             totalValue = calculator.getTransactionValueWithTaxes(order[4], order[5], isSell)
             totalItem = NumericItem(formatFloatToMoney(totalValue))
             totalItem.setData(QtCore.Qt.UserRole, totalValue)

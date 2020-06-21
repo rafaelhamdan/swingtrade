@@ -142,7 +142,7 @@ class Position(QObject):
         # Get profit value
         profit = 0.0
         if (currentValue > 0):
-            calculator = Calculator()
+            calculator = Calculator(self.db)
             totalSellingValue = calculator.getTransactionValueWithTaxes(amount, currentValue, True)
             profit = totalSellingValue - (amount*avgValue)
         # Set data on row
@@ -155,7 +155,7 @@ class Position(QObject):
         if (not year):
             return
         ordersUpToYear = self.db.getOrdersInAscendingDateUpToYear(year)
-        calculator = Calculator()
+        calculator = Calculator(self.db)
         ret = calculator.getYearExtract(ordersUpToYear)
         # Now extract from return the 
         # TODO: Error out if we have negative number of stocks

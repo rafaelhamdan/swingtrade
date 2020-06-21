@@ -2,6 +2,7 @@ import sys
 
 from database import *
 from extract import *
+from init import *
 from list_order import *
 from position import *
 from profit import *
@@ -28,19 +29,23 @@ class Main:
             QMessageBox.critical(self.mainWindow, 'ERRO', 'Impossível encontrar arquivo de banco de dados', QMessageBox.StandardButton.Abort)
             exit(-1)
 
+        self.mainWindow.resize(1024, 768)
         self.mainWindow.show()
         sys.exit(self.app.exec_())
 
     def setupTabWidgets(self):
         self.tabWindow = self.mainWindow.findChild(QTabWidget, 'tab_widget')
 
-        registerOrderLayout = self.mainWindow.findChild(QVBoxLayout, 'register_order_layout')
-        self.registerOrder = RegisterOrder(self.db)
-        registerOrderLayout.addWidget(self.registerOrder.getUi())
+        initLayout = self.mainWindow.findChild(QVBoxLayout, 'init_layout')
+        self.init = Init(self.db)
+        initLayout.addWidget(self.init.getUi())
 
         listOrderLayout = self.mainWindow.findChild(QVBoxLayout, 'list_order_layout')
         self.listOrder = ListOrder(self.db)
         listOrderLayout.addWidget(self.listOrder.getUi())
+
+        self.registerOrder = RegisterOrder(self.db)
+        self.tabWindow.addTab(self.registerOrder.getUi(), 'Importar ordens')
 
         self.extract = Extract(self.db)
         self.tabWindow.addTab(self.extract.getUi(), 'Extratos anuais')
@@ -62,16 +67,18 @@ class Main:
         # Once the tab has gone to list the orders, update it
         # TODO: Only update/re-render if the database has changed since we started
         if (index == 0):
-            self.listOrder.updateWindow()
+            self.init.updateWindow()
         elif (index == 1):
-            self.registerOrder.updateWindow()
+            self.listOrder.updateWindow()
         elif (index == 2):
-            self.extract.updateWindow()
+            self.registerOrder.updateWindow()
         elif (index == 3):
-            self.profit.updateWindow()
+            self.extract.updateWindow()
         elif (index == 4):
-            self.reports.updateWindow()
+            self.profit.updateWindow()
         elif (index == 5):
+            self.reports.updateWindow()
+        elif (index == 6):
             self.position.updateWindow()
         else:
             assert(0)
