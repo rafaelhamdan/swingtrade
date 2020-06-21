@@ -22,23 +22,28 @@ class SupportedSpreadsheets(Enum):
     BM_FBOVESPA = 2
 
 class ColumnsTypeExtract():
-    NONE = 0
-    DATE = 1
-    ORDER_TYPE = 3
-    MARKET_TYPE = 4
-    STOCK_CODE = 6
-    STOCK_NAME = 7
-    STOCK_AMOUNT = 8
-    STOCK_VALUE = 9
+    # FORMAT: ['Data Negócio', 'C/V', 'Mercado', 'Prazo', 'Código', 'Especificação do Ativo',
+    #          'Quantidade', 'Preço (R$)', 'Valor Total (R$)']
+    # Column 'prazo' is usually empty for Mercado a Vista, which is the only supported
+    NONE = -1
+    DATE = 0
+    ORDER_TYPE = 1
+    MARKET_TYPE = 2
+    STOCK_CODE = 3
+    STOCK_NAME = 4
+    STOCK_AMOUNT = 5
+    STOCK_VALUE = 6
 
 class ColumnsTypeBovespa():
-    NONE = 0
-    STOCK_CODE = 3
-    DATE = 10
-    STOCK_AMOUNT_BUY = 18
-    STOCK_AMOUNT_SELL = 24
-    STOCK_VALUE_BUY = 34
-    STOCK_VALUE_SELL = 43
+    # FORMAT: ['Cód', 'Data Negócio', 'Qtde.Compra', 'Qtd.Venda', 'Preço Médio Compra', 
+    #          'Preço Médio Venda', 'Qtde. Liquida', 'Posição']
+    NONE = -1
+    STOCK_CODE = 0
+    DATE = 1
+    STOCK_AMOUNT_BUY = 2
+    STOCK_AMOUNT_SELL = 3
+    STOCK_VALUE_BUY = 4
+    STOCK_VALUE_SELL = 5
 
 def getFloatFromStr(strValue):
     return float(strValue.replace('.', '').replace(',', '.'))
@@ -91,11 +96,11 @@ class ProcessOrder:
         foundEnd = False
         for rowNum in xrange(self.sheet.nrows):
             # TODO: Extract some methods here and fixed lines' contents
-            rowValues = self.sheet.row_values(rowNum)
+            rowValues = list(filter(None, self.sheet.row_values(rowNum)))
             order = False
             if (self.headerType != SupportedSpreadsheets.NONE):
-                # If all values are the same, we hit the end of the spreadsheet data (all empty usually)
-                if (len(set(rowValues)) == 1):
+                # If empty line, we reached the end
+                if (len(rowValues) == 0):
                     foundEnd = True
                     break
                 # Process this row and get an order from it
@@ -103,12 +108,12 @@ class ProcessOrder:
                 if (not order):
                     return False
                 orders.append(order)
-            elif (rowValues == ['', 'Data Negócio', '', 'C/V', 'Mercado', 'Prazo', 'Código', 'Especificação do Ativo', 'Quantidade', 'Preço (R$)', 'Valor Total (R$)']):
+            elif (rowValues == ['Data Negócio', 'C/V', 'Mercado', 'Prazo', 'Código', 'Especificação do Ativo',
+                                'Quantidade', 'Preço (R$)', 'Valor Total (R$)']):
                 self.headerType = SupportedSpreadsheets.EXTRACT
                 continue
-            elif (rowValues == ['', '', '', 'Cód', '', '', '', '', '', '', 'Data Negócio', '', '', '', '', '', '', '', 'Qtde.Compra', '', '',
-                                '', '', '', 'Qtd.Venda', '', '', '', '', '', '', '', '', '', 'Preço Médio Compra', '', '', '', '', '', '', '',
-                                '',  'Preço Médio Venda', '', '', '', '', '', 'Qtde. Liquida', '', '', '', '', 'Posição', '', '', '', '', '']):
+            elif (rowValues == ['Cód', 'Data Negócio', 'Qtde.Compra', 'Qtd.Venda', 'Preço Médio Compra', 
+                                'Preço Médio Venda', 'Qtde. Liquida', 'Posição']):
                 self.headerType = SupportedSpreadsheets.BM_FBOVESPA
                 continue
 
@@ -137,18 +142,13 @@ class ProcessOrder:
         return False
 
     def proccessBovespaRow(self, rowNum, values):
-        # FORMAT HEADER:
-        #   ['', '', '', 'Cód', '', '', '', '', '', '', 'Data Negócio', '', '', '', '', '', '', '', 'Qtde.Compra', '', '',
-        #    '', '', '', 'Qtd.Venda', '', '', '', '', '', '', '', '', '', 'Preço Médio Compra', '', '', '', '', '', '', '',
-        #    '',  'Preço Médio Venda', '', '', '', '', '', 'Qtde. Liquida', '', '', '', '', 'Posição', '', '', '', '', '']
-
         # Extract date
         date = None
         try:
-            date = datetime.datetime(*xlrd.xldate_as_tuple(self.sheet.cell_value(rowNum, ColumnsTypeBovespa.DATE), self.xlsFile.datemode))
+            date = datetime.datetime(*xlrd.xldate_as_tuple(values[ColumnsTypeBovespa.DATE], self.xlsFile.datemode))
         except:
             self.errorType = ErrorType.INVALID_DATE
-            self.errorField = [values[ColumnsTypeExtract.DATE], rowNum + 1, ColumnsTypeExtract.DATE + 1]
+            self.errorField = [values[ColumnsTypeBovespa.DATE], rowNum + 1, ColumnsTypeBovespa.DATE + 1]
             return False
 
         # Extrat code and type
@@ -181,9 +181,6 @@ class ProcessOrder:
         return [date, stockType, stockCode, '', stockAmount, stockValue]
 
     def processExtractRow(self, rowNum, values):
-        # FORMAT HEADER:
-        #   ['', 'Data Negócio', '', 'C/V', 'Mercado', 'Prazo', 'Código', 'Especificação do Ativo', 'Quantidade', 'Preço (R$)', 'Valor Total (R$)']
-
         # Check market type
         if (values[ColumnsTypeExtract.MARKET_TYPE] != 'Mercado a Vista'):
             self.errorType = ErrorType.INVALID_MARKET_TYPE
