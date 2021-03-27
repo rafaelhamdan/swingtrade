@@ -6,7 +6,7 @@ To build the application, start a virtual environment using `venv`:
 ```
 python3 -m venv env
 source ./env/bin/activate
-python install -r requirements
+python install -r requirements.txt
 ```
 Pip will install all the required packages, and you should be able to start the application:
 ```
