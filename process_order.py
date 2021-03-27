@@ -182,7 +182,7 @@ class ProcessOrder:
 
     def processExtractRow(self, rowNum, values):
         # Check market type
-        if (values[ColumnsTypeExtract.MARKET_TYPE] != 'Mercado a Vista'):
+        if (values[ColumnsTypeExtract.MARKET_TYPE] != 'Mercado a Vista' and values[ColumnsTypeExtract.MARKET_TYPE] != 'Merc. Fracionário'):
             self.errorType = ErrorType.INVALID_MARKET_TYPE
             self.errorField = [values[ColumnsTypeExtract.MARKET_TYPE], rowNum + 1, ColumnsTypeExtract.MARKET_TYPE + 1]
             return False
