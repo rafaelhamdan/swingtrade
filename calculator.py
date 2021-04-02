@@ -121,6 +121,7 @@ class Calculator:
                 # This month is to be reported, show discounted loss until now
                 if date.year == year:
                     ret[key] = [value[0], lossToDiscount, 0, value[1], 0]
+                continue
             # Ignore months with value sold smaller than when we pay taxes
             if value[0] <= self.NO_TAXES_SELLING_PER_YEAR_LIMIT:
                 continue
